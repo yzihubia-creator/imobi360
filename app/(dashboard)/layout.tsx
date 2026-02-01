@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { DashboardNav } from '@/components/dashboard/dashboard-nav'
+import { Sidebar } from '@/components/navigation/sidebar'
+import type { UserRole } from '@/lib/permissions'
 
 export default async function DashboardLayout({
   children,
@@ -17,15 +18,38 @@ export default async function DashboardLayout({
     redirect('/login')
   }
 
+  // Get user's tenant and role
+  const { data: userRecord } = await supabase
+    .from('users')
+    .select('tenant_id, role')
+    .eq('auth_user_id', user.id)
+    .single()
+
+  if (!userRecord) {
+    redirect('/login')
+  }
+
+  const tenantId = userRecord.tenant_id
+  const userRole = (userRecord.role || 'viewer') as UserRole
+
+  // Get tenant name for branding
+  const { data: tenant } = await supabase
+    .from('tenants')
+    .select('name')
+    .eq('id', tenantId)
+    .single()
+
+  const tenantName = tenant?.name || 'CRM'
+
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-64 border-r bg-gray-50/40 flex flex-col">
+      <aside className="w-64 border-r bg-gray-50/40 dark:bg-gray-900/40 flex flex-col">
         <div className="flex h-16 items-center border-b px-6 flex-shrink-0">
-          <h1 className="text-xl font-bold">IMOBI360</h1>
+          <h1 className="text-xl font-bold">{tenantName}</h1>
         </div>
         <div className="flex-1 overflow-auto">
-          <DashboardNav />
+          <Sidebar tenantId={tenantId} userRole={userRole} />
         </div>
       </aside>
 
@@ -37,9 +61,9 @@ export default async function DashboardLayout({
             <h2 className="text-lg font-semibold">Dashboard</h2>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">{user.email}</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">{user.email}</span>
             <form action="/api/auth/signout" method="post">
-              <button className="text-sm text-gray-600 hover:text-gray-900">
+              <button className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
                 Sair
               </button>
             </form>
