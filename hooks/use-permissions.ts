@@ -1,8 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { checkPermission, checkFieldPermissions } from '@/lib/permissions'
-import type { UserRole, EntityType, PermissionAction } from '@/lib/permissions'
+import { canEditField, validateFieldUpdates, type UserRole, type EntityType } from '@/lib/permissions'
 
 interface UsePermissionsOptions {
   userRole: UserRole
@@ -10,65 +9,71 @@ interface UsePermissionsOptions {
 }
 
 /**
- * Hook to check field-level permissions in React components
+ * Hook to check field-level permissions in React components.
+ * Thin wrapper around the centralized permission resolver.
  */
 export function usePermissions({ userRole, entityType }: UsePermissionsOptions) {
   /**
-   * Check if user can perform action on a specific field
+   * Check if user can edit a specific field.
    */
-  const canAccess = useMemo(
-    () => (field: string, action: PermissionAction) => {
-      const result = checkPermission(
-        { userRole, entityType, field },
-        action
-      )
+  const canEdit = useMemo(
+    () => (field: string) => {
+      const result = canEditField(userRole, entityType, field)
       return result.allowed
     },
     [userRole, entityType]
   )
 
   /**
-   * Check if user can write to a field
+   * Get the permission check result with reason.
+   * Useful for displaying tooltips or error messages.
    */
-  const canEdit = useMemo(
-    () => (field: string) => canAccess(field, 'write'),
-    [canAccess]
-  )
-
-  /**
-   * Check if user can read a field
-   */
-  const canView = useMemo(
-    () => (field: string) => canAccess(field, 'read'),
-    [canAccess]
-  )
-
-  /**
-   * Get permission results for multiple fields
-   */
-  const checkFields = useMemo(
-    () => (fields: string[], action: PermissionAction) => {
-      return checkFieldPermissions({ userRole, entityType }, fields, action)
+  const checkPermission = useMemo(
+    () => (field: string) => {
+      return canEditField(userRole, entityType, field)
     },
     [userRole, entityType]
   )
 
   /**
-   * Check if user is admin (full access)
+   * Validate multiple field updates at once.
+   * Returns null if all allowed, or the first forbidden field.
+   */
+  const validateFields = useMemo(
+    () => (fields: string[]) => {
+      return validateFieldUpdates(userRole, entityType, fields)
+    },
+    [userRole, entityType]
+  )
+
+  /**
+   * Check if user is admin (full access).
    */
   const isAdmin = userRole === 'admin'
 
   /**
-   * Check if user is viewer (read-only)
+   * Check if user is viewer (read-only).
    */
   const isViewer = userRole === 'viewer'
 
+  /**
+   * Check if user is manager.
+   */
+  const isManager = userRole === 'manager'
+
+  /**
+   * Check if user is member.
+   */
+  const isMember = userRole === 'member'
+
   return {
-    canAccess,
     canEdit,
-    canView,
-    checkFields,
+    checkPermission,
+    validateFields,
     isAdmin,
     isViewer,
+    isManager,
+    isMember,
+    role: userRole,
   }
 }

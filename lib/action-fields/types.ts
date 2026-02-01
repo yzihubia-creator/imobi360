@@ -1,6 +1,8 @@
 import type { Database } from '@/src/types/supabase'
+import type { EntityType, UserRole } from '@/lib/permissions'
 
-export type EntityType = 'deal' | 'contact'
+// Re-export for convenience
+export type { EntityType, UserRole }
 
 export interface ActionFieldConfig {
   /**

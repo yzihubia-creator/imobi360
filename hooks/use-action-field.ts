@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import type { EntityType } from '@/lib/permissions'
 
 interface ExecuteActionOptions {
-  entityType: 'deal' | 'contact'
+  entityType: EntityType
   entityId: string
   fieldName: string
   context?: Record<string, any>
@@ -37,7 +38,9 @@ export function useActionField() {
       const endpoint =
         entityType === 'deal'
           ? `/api/deals/${entityId}/actions`
-          : `/api/leads/${entityId}/actions`
+          : entityType === 'lead' || entityType === 'contact'
+          ? `/api/leads/${entityId}/actions`
+          : ''
 
       const response = await fetch(endpoint, {
         method: 'POST',

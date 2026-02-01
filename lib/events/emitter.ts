@@ -1,8 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import type { Database } from '@/src/types/supabase'
+import type { EntityType as PermissionEntityType } from '@/lib/permissions'
 
 type EventType = Database['public']['Enums']['event_type']
-type EntityType = 'contact' | 'deal' | 'pipeline' | 'activity'
+type EntityType = PermissionEntityType | 'pipeline' | 'activity'
 
 interface EmitEventParams {
   tenantId: string

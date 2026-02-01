@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { emitButtonClick } from '@/lib/events/emitter'
-import { checkPermission } from '@/lib/permissions'
+import { canEditField } from '@/lib/permissions'
 import { sendWebhook } from '@/lib/n8n/client'
 import type {
   ActionExecutionContext,
@@ -20,10 +20,7 @@ export async function executeActionField(
     context
 
   // Validate permissions
-  const permissionCheck = checkPermission(
-    { userRole, entityType, field: fieldName },
-    'write'
-  )
+  const permissionCheck = canEditField(userRole, entityType, fieldName)
 
   if (!permissionCheck.allowed) {
     return {
