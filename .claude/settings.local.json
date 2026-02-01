@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx next lint:*)",
+      "Bash(npm run build:*)",
+      "Bash(wc:*)",
+      "Bash(npx shadcn@latest add badge dialog scroll-area sonner)",
+      "Skill(gsd:progress)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ]
+  }
+}
