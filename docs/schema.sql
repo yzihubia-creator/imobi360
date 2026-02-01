@@ -80,6 +80,8 @@ CREATE TABLE tenants (
   email TEXT NOT NULL,
   plan tenant_plan NOT NULL DEFAULT 'free',
   status tenant_status NOT NULL DEFAULT 'active',
+  business_type TEXT,
+  onboarding_completed_at TIMESTAMPTZ,
   settings JSONB DEFAULT '{}',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -91,6 +93,8 @@ CREATE TABLE tenants (
 
 COMMENT ON TABLE tenants IS 'Multi-tenant root entity. One row per customer organization.';
 COMMENT ON COLUMN tenants.slug IS 'URL-safe unique identifier for tenant (e.g., acme-corp)';
+COMMENT ON COLUMN tenants.business_type IS 'Type of business: Imobiliária, Corretor autônomo, Incorporadora, Outro';
+COMMENT ON COLUMN tenants.onboarding_completed_at IS 'Timestamp when tenant completed onboarding flow';
 COMMENT ON COLUMN tenants.settings IS 'Tenant-level configuration (JSONB for flexibility)';
 
 -- --------------------------------------------

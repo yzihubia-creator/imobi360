@@ -488,10 +488,12 @@ export type Database = {
       }
       tenants: {
         Row: {
+          business_type: string | null
           created_at: string | null
           email: string
           id: string
           name: string
+          onboarding_completed_at: string | null
           plan: Database["public"]["Enums"]["tenant_plan"]
           settings: Json | null
           slug: string
@@ -499,10 +501,12 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          business_type?: string | null
           created_at?: string | null
           email: string
           id?: string
           name: string
+          onboarding_completed_at?: string | null
           plan?: Database["public"]["Enums"]["tenant_plan"]
           settings?: Json | null
           slug: string
@@ -510,10 +514,12 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          business_type?: string | null
           created_at?: string | null
           email?: string
           id?: string
           name?: string
+          onboarding_completed_at?: string | null
           plan?: Database["public"]["Enums"]["tenant_plan"]
           settings?: Json | null
           slug?: string
@@ -524,6 +530,7 @@ export type Database = {
       }
       users: {
         Row: {
+          auth_user_id: string | null
           created_at: string | null
           email: string
           id: string
@@ -535,6 +542,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          auth_user_id?: string | null
           created_at?: string | null
           email: string
           id?: string
@@ -546,6 +554,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          auth_user_id?: string | null
           created_at?: string | null
           email?: string
           id?: string
