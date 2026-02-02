@@ -29,15 +29,26 @@ export function NavItem({ item, currentPath, className }: NavItemProps) {
     <Link
       href={item.route}
       className={cn(
-        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+        'group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ease-in-out',
         isActive
-          ? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
-          : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800',
+          ? 'bg-slate-800/60 text-slate-50 shadow-sm border border-white/10'
+          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent hover:border-white/5',
         className
       )}
       aria-current={isActive ? 'page' : undefined}
     >
-      <Icon className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+      {isActive && (
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-blue-500 rounded-r-full" />
+      )}
+      <Icon
+        className={cn(
+          "h-4 w-4 flex-shrink-0 transition-all duration-200",
+          isActive
+            ? "text-slate-300"
+            : "text-slate-500 group-hover:text-slate-300"
+        )}
+        aria-hidden="true"
+      />
       <span>{item.label}</span>
     </Link>
   )

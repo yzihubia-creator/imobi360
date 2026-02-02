@@ -36,9 +36,9 @@ export function Sidebar({ tenantId, userRole }: SidebarProps) {
   if (isLoading) {
     return (
       <nav className="flex flex-col gap-1 p-4">
-        <div className="h-10 bg-gray-100 animate-pulse rounded-lg" />
-        <div className="h-10 bg-gray-100 animate-pulse rounded-lg" />
-        <div className="h-10 bg-gray-100 animate-pulse rounded-lg" />
+        <div className="h-10 bg-slate-800/30 animate-pulse rounded-lg border border-white/5" />
+        <div className="h-10 bg-slate-800/30 animate-pulse rounded-lg border border-white/5" />
+        <div className="h-10 bg-slate-800/30 animate-pulse rounded-lg border border-white/5" />
       </nav>
     )
   }
@@ -48,7 +48,7 @@ export function Sidebar({ tenantId, userRole }: SidebarProps) {
     console.error('[Sidebar] Failed to load tenant config:', error)
     return (
       <nav className="flex flex-col gap-1 p-4">
-        <div className="text-sm text-red-600 p-3 bg-red-50 rounded-lg">
+        <div className="text-sm text-red-400 p-3 bg-red-500/10 rounded-lg border border-red-500/20">
           Failed to load navigation configuration.
         </div>
       </nav>
@@ -61,7 +61,7 @@ export function Sidebar({ tenantId, userRole }: SidebarProps) {
     console.error('[Sidebar] Invalid navigation config:', validationErrors)
     return (
       <nav className="flex flex-col gap-1 p-4">
-        <div className="text-sm text-red-600 p-3 bg-red-50 rounded-lg">
+        <div className="text-sm text-red-400 p-3 bg-red-500/10 rounded-lg border border-red-500/20">
           Invalid navigation configuration:
           <ul className="mt-2 list-disc list-inside">
             {validationErrors.map((err, i) => (
@@ -87,7 +87,7 @@ export function Sidebar({ tenantId, userRole }: SidebarProps) {
   if (sortedItems.length === 0) {
     return (
       <nav className="flex flex-col gap-1 p-4">
-        <div className="text-sm text-gray-500 p-3 bg-gray-50 rounded-lg">
+        <div className="text-sm text-slate-400 p-3 bg-slate-800/30 rounded-lg border border-white/5">
           No navigation items available.
         </div>
       </nav>
