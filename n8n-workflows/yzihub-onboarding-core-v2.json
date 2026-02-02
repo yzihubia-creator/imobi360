@@ -1,0 +1,229 @@
+{
+  "name": "YZIHUB Onboarding Core v2",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "onboarding/complete",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "yzihub-onboarding-complete"
+    },
+    {
+      "parameters": {
+        "jsCode": "// YZIHUB Onboarding Sanitizer v2\n// Resilient, no excessive validation\n\nconst input = $input.first().json;\n\n// 1. Extract and clean basic fields\nconst tenant_id = String(input.tenant_id || '').trim();\nconst auth_user_id = String(input.auth_user_id || '').trim();\nconst template_id = String(input.template_id || 'imobi360').trim();\nconst user_role = String(input.user_role || 'admin').trim();\n\n// 2. Validate only existence (no UUID regex)\nif (!tenant_id || !auth_user_id) {\n  throw new Error('Missing required fields: tenant_id or auth_user_id');\n}\n\n// 3. Process enabled_modules\nlet enabled_modules = input.enabled_modules || {};\n\n// Convert array to object if needed\nif (Array.isArray(enabled_modules)) {\n  const modulesObject = {};\n  enabled_modules.forEach(module => {\n    if (typeof module === 'string') {\n      modulesObject[module] = { enabled: true };\n    } else if (module.id) {\n      modulesObject[module.id] = { enabled: module.enabled !== false };\n    }\n  });\n  enabled_modules = modulesObject;\n}\n\n// Ensure all modules have proper structure\nconst normalized_modules = [];\nObject.keys(enabled_modules).forEach(moduleId => {\n  const module = enabled_modules[moduleId];\n  normalized_modules.push({\n    id: moduleId,\n    enabled: module.enabled !== false\n  });\n});\n\n// 4. Build final_settings object for tenant\nconst now = new Date().toISOString();\n\nconst final_settings = {\n  template_id: template_id,\n  template_version: '1.0.0',\n  template_applied_at: now,\n  onboarding_completed_at: now,\n  overrides: {\n    modules: normalized_modules\n  }\n};\n\n// 5. Return sanitized data\nreturn {\n  tenant_id,\n  auth_user_id,\n  user_role,\n  template_id,\n  final_settings,\n  onboarding_completed_at: now\n};"
+      },
+      "id": "code-sanitizer",
+      "name": "Sanitizer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "tenants",
+        "filterType": "manual",
+        "matchFields": {
+          "fields": [
+            {
+              "field": "id",
+              "value": "={{ $json.tenant_id }}"
+            }
+          ]
+        },
+        "columns": {
+          "fields": [
+            {
+              "column": "settings",
+              "value": "={{ JSON.stringify($json.final_settings) }}"
+            },
+            {
+              "column": "onboarding_completed_at",
+              "value": "={{ $json.onboarding_completed_at }}"
+            },
+            {
+              "column": "status",
+              "value": "active"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "supabase-update-tenant",
+      "name": "Update Tenant",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [680, 200],
+      "credentials": {
+        "supabaseApi": {
+          "id": "1",
+          "name": "Supabase YZIHUB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "tableId": "users",
+        "columnsUi": {
+          "fields": [
+            {
+              "column": "auth_user_id",
+              "value": "={{ $json.auth_user_id }}"
+            },
+            {
+              "column": "tenant_id",
+              "value": "={{ $json.tenant_id }}"
+            },
+            {
+              "column": "role",
+              "value": "={{ $json.user_role }}"
+            }
+          ]
+        },
+        "onConflict": {
+          "fields": [
+            {
+              "field": "auth_user_id"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "supabase-upsert-user",
+      "name": "Upsert User",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [680, 400],
+      "credentials": {
+        "supabaseApi": {
+          "id": "1",
+          "name": "Supabase YZIHUB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"ok\", \"tenant_id\": $json.tenant_id, \"timestamp\": $json.onboarding_completed_at } }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "webhook-response",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"error\", \"message\": $json.error?.message || \"Internal error\", \"timestamp\": new Date().toISOString() } }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "webhook-error-response",
+      "name": "Error Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [900, 500]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Sanitizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sanitizer": {
+      "main": [
+        [
+          {
+            "node": "Update Tenant",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Upsert User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Tenant": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert User": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "id": "1",
+      "name": "YZIHUB"
+    },
+    {
+      "id": "2",
+      "name": "Onboarding"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2026-02-02T17:30:00.000Z",
+  "versionId": "v2-resilient"
+}
